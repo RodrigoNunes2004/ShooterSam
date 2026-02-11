@@ -6,7 +6,7 @@
 #include "AIController.h"
 #include "CombatAIController.generated.h"
 
-class UStateTreeAIComponent;
+class UStateTreeComponent;
 
 /**
  *	A basic AI Controller capable of running StateTree
@@ -18,7 +18,7 @@ class ACombatAIController : public AAIController
 
 	/** StateTree Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UStateTreeAIComponent* StateTreeAI;
+	UStateTreeComponent* StateTreeAI;
 
 public:
 

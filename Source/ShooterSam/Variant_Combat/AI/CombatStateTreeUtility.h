@@ -48,12 +48,6 @@ struct FStateTreeCharacterGroundedCondition : public FStateTreeConditionCommonBa
 	/** Tests the StateTree condition */
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
 
-#if WITH_EDITOR
-
-	/** Provides the description string */
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif
-
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -102,12 +96,6 @@ struct FStateTreeIsInDangerCondition : public FStateTreeConditionCommonBase
 	/** Tests the StateTree condition */
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
 
-#if WITH_EDITOR
-
-	/** Provides the description string */
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif
-
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -123,6 +111,10 @@ struct FStateTreeAttackInstanceData
 	/** Character that will perform the attack */
 	UPROPERTY(EditAnywhere, Category = Context)
 	TObjectPtr<ACombatEnemy> Character;
+
+	/** Set when the task is complete */
+	UPROPERTY(VisibleAnywhere, Category = "Output")
+	bool bTaskCompleted = false;
 };
 
 /**
@@ -140,12 +132,12 @@ struct FStateTreeComboAttackTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is entered */
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
+	/** Runs while the owning state is active */
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
+
 	/** Runs when the owning state is ended */
 	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 /**
@@ -163,12 +155,12 @@ struct FStateTreeChargedAttackTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is entered */
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
+	/** Runs while the owning state is active */
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
+
 	/** Runs when the owning state is ended */
 	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 /**
@@ -186,12 +178,12 @@ struct FStateTreeWaitForLandingTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is entered */
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
+	/** Runs while the owning state is active */
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
+
 	/** Runs when the owning state is ended */
 	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -231,9 +223,6 @@ struct FStateTreeFaceActorTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is ended */
 	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -273,9 +262,6 @@ struct FStateTreeFaceLocationTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is ended */
 	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -312,9 +298,6 @@ struct FStateTreeSetCharacterSpeedTask : public FStateTreeTaskCommonBase
 	/** Runs when the owning state is entered */
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -359,7 +342,4 @@ struct FStateTreeGetPlayerInfoTask : public FStateTreeTaskCommonBase
 	/** Runs while the owning state is active */
 	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 
-#if WITH_EDITOR
-	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
-#endif // WITH_EDITOR
 };

@@ -2,6 +2,7 @@
 
 
 #include "Gun.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AGun::AGun()
@@ -15,12 +16,17 @@ AGun::AGun()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(SceneRoot);
 
+	MuzzleFlashParticleSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Muzzle Flash"));
+	MuzzleFlashParticleSystem->SetupAttachment(Mesh);
+
 }
 
 // Called when the game starts or when spawned
 void AGun::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MuzzleFlashParticleSystem->Deactivate();
 	
 }
 
@@ -33,20 +39,27 @@ void AGun::Tick(float DeltaTime)
 
 void AGun::PullTrigger()
 {
-	FVector ViewPointLocation;
-	FRotator ViewPointRotation;
-	OwnerController->GetPlayerViewPoint(ViewPointLocation, ViewPointRotation);
+	MuzzleFlashParticleSystem->Activate(true);
 
-	FVector EndLocation = ViewPointLocation + ViewPointRotation.Vector() * MaxRange;
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-	Params.AddIgnoredActor(GetOwner());
-	bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, ViewPointLocation, EndLocation, ECC_GameTraceChannel1, Params);
-	if(IsHit)
+	if (OwnerController)
 	{
-		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 5.0f, 16, FColor::Red, true);
+		FVector ViewPointLocation;
+		FRotator ViewPointRotation;
+		OwnerController->GetPlayerViewPoint(ViewPointLocation, ViewPointRotation);
+
+		FVector EndLocation = ViewPointLocation + ViewPointRotation.Vector() * MaxRange;
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		Params.AddIgnoredActor(GetOwner());
+		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, ViewPointLocation, EndLocation, ECC_GameTraceChannel2, Params);
+		if (IsHit)
+		{
+			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 5.0f, 16, FColor::Red, true);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactParticleSystem, HitResult.ImpactPoint, HitResult.ImpactPoint.Rotation());
+		}
 	}
 }
+
 

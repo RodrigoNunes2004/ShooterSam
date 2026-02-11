@@ -2,12 +2,12 @@
 
 
 #include "SideScrollingAIController.h"
-#include "GameplayStateTreeModule/Public/Components/StateTreeAIComponent.h"
+#include "Components/StateTreeComponent.h"
 
 ASideScrollingAIController::ASideScrollingAIController()
 {
 	// create the StateTree AI Component
-	StateTreeAI = CreateDefaultSubobject<UStateTreeAIComponent>(TEXT("StateTreeAI"));
+	StateTreeAI = CreateDefaultSubobject<UStateTreeComponent>(TEXT("StateTreeAI"));
 	check(StateTreeAI);
 
 	// ensure we start the StateTree when we possess the pawn
