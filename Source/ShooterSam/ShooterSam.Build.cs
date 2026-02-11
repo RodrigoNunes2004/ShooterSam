@@ -19,7 +19,8 @@ public class ShooterSam : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"Niagara"
+			"Niagara",
+			"NiagaraCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -179,6 +179,8 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 {
 	if (IsAlive)
 	{
+		UE_LOG(LogTemp, Display, TEXT("Damage taken: %f"), Damage);
+
 		Health -= Damage;
 		UpdateHUD();
 
@@ -187,6 +189,9 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 			IsAlive = false;
 			Health = 0.0f;
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			UE_LOG(LogTemp, Display, TEXT("Character died: %s"), *GetActorNameOrLabel());
+
 			DetachFromControllerPendingDestroy();
 		}
 	}

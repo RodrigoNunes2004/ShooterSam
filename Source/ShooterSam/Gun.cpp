@@ -2,6 +2,7 @@
 
 
 #include "Gun.h"
+#include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -56,8 +57,14 @@ void AGun::PullTrigger()
 		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, ViewPointLocation, EndLocation, ECC_GameTraceChannel2, Params);
 		if (IsHit)
 		{
-			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 5.0f, 16, FColor::Red, true);
+			/*DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 5.0f, 16, FColor::Red, false);*/
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactParticleSystem, HitResult.ImpactPoint, HitResult.ImpactPoint.Rotation());
+
+			AActor* HitActor = HitResult.GetActor();
+			if(HitActor)
+			{
+				UGameplayStatics::ApplyDamage(HitActor, BulletDamage, OwnerController, this, UDamageType::StaticClass());
+			}
 		}
 	}
 }

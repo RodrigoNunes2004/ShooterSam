@@ -40,7 +40,10 @@ public:
 	UNiagaraSystem* ImpactParticleSystem;
 
 	UPROPERTY(EditAnywhere)
-	float MaxRange = 1000.0f;
+	float MaxRange = 100000.0f;
+
+	UPROPERTY(EditAnywhere)
+	float BulletDamage = 10.0f;
 
 	AController* OwnerController;
 
