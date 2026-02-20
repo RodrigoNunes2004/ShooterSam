@@ -1,9 +1,30 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ShooterAI.h"
+
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShooterSamCharacter.h"
+#include "BrainComponent.h"
+
+static bool IsPlayerPawnAlive(const APawn* Pawn)
+{
+	if (!Pawn)
+	{
+		return false;
+	}
+
+	// If the pawn is our player character class, use the explicit alive flag.
+	if (const AShooterSamCharacter* ShooterChar = Cast<AShooterSamCharacter>(Pawn))
+	{
+		return ShooterChar->IsAlive;
+	}
+
+	// Generic fallback: if it's no longer possessed, treat as "dead/unavailable" for AI targetting.
+	// This matches your current death behavior (DetachFromControllerPendingDestroy()).
+	return Pawn->GetController() != nullptr;
+}
 
 namespace ShooterAIBlackboardKeys
 {
@@ -49,25 +70,11 @@ AShooterAI::AShooterAI()
 void AShooterAI::BeginPlay()
 {
 	Super::BeginPlay();
-	// Cache the player for simple chase logic and/or BT setup
+
+	// Cache the player for BT setup / fallback logic
 	if (!PlayerPawn)
 	{
 		PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	}
-
-	// If we already have a pawn by BeginPlay, kick off AI logic now.
-	// (In many cases OnPossess is the right place; we support both.)
-	if (GetPawn() && EnemyAIBehaviorTree)
-	{
-		const bool bStarted = RunBehaviorTree(EnemyAIBehaviorTree);
-		UE_LOG(LogTemp, Display, TEXT("%s RunBehaviorTree(BeginPlay) => %s"),
-			*GetActorNameOrLabel(),
-			bStarted ? TEXT("Started") : TEXT("Failed"));
-
-		if (bStarted)
-		{
-			InitShooterAIBlackboard(GetBlackboardComponent(), PlayerPawn, GetPawn());
-		}
 	}
 }
 
@@ -84,15 +91,19 @@ void AShooterAI::OnPossess(APawn* InPawn)
 
 	if (EnemyAIBehaviorTree)
 	{
-		const bool bStarted = RunBehaviorTree(EnemyAIBehaviorTree);
-		UE_LOG(LogTemp, Display, TEXT("%s RunBehaviorTree(OnPossess) => %s (Pawn=%s)"),
-			*GetActorNameOrLabel(),
-			bStarted ? TEXT("Started") : TEXT("Failed"),
-			*GetNameSafe(InPawn));
-
-		if (bStarted)
+		// Avoid restarting logic if something already started it (eg. BP).
+		if (!GetBrainComponent() || !GetBrainComponent()->IsRunning())
 		{
-			InitShooterAIBlackboard(GetBlackboardComponent(), PlayerPawn, MyPawn);
+			const bool bStarted = RunBehaviorTree(EnemyAIBehaviorTree);
+			UE_LOG(LogTemp, Display, TEXT("%s RunBehaviorTree(OnPossess) => %s (Pawn=%s)"),
+				*GetActorNameOrLabel(),
+				bStarted ? TEXT("Started") : TEXT("Failed"),
+				*GetNameSafe(InPawn));
+		}
+
+		if (UBlackboardComponent* BB = GetBlackboardComponent())
+		{
+			InitShooterAIBlackboard(BB, PlayerPawn, MyPawn);
 		}
 	}
 	else
@@ -106,6 +117,48 @@ void AShooterAI::OnPossess(APawn* InPawn)
 void AShooterAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Reacquire player pawn if it changed (respawn, etc.)
+	if (!PlayerPawn)
+	{
+		PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	}
+
+	// If the player is dead, stop tracking them.
+	if (!IsPlayerPawnAlive(PlayerPawn))
+	{
+		// Hard stop AI logic so BT can't keep issuing MoveTo/focus updates.
+		if (UBrainComponent* Brain = GetBrainComponent())
+		{
+			if (Brain->IsRunning())
+			{
+				Brain->StopLogic(TEXT("Player unavailable"));
+			}
+		}
+
+		// Clear target-related BB keys so BT can fall back to return/home behavior.
+		if (UBlackboardComponent* BlackboardComp = GetBlackboardComponent())
+		{
+			if (BlackboardComp->GetKeyID(ShooterAIBlackboardKeys::PlayerLocation) != FBlackboard::InvalidKey)
+			{
+				BlackboardComp->ClearValue(ShooterAIBlackboardKeys::PlayerLocation);
+			}
+			if (BlackboardComp->GetKeyID(ShooterAIBlackboardKeys::LastKnownPlayerLocation) != FBlackboard::InvalidKey)
+			{
+				BlackboardComp->ClearValue(ShooterAIBlackboardKeys::LastKnownPlayerLocation);
+			}
+		}
+
+		CachedLastKnownPlayerLocation = FVector::ZeroVector;
+		bHasCachedLastKnownPlayerLocation = false;
+
+		ClearFocus(EAIFocusPriority::Gameplay);
+		StopMovement();
+
+		// Force future ticks to reacquire (in case of respawn).
+		PlayerPawn = nullptr;
+		return;
+	}
 
 	// If a Behavior Tree + Blackboard are running, keep keys updated to match your BT:
 	// - "PlayerLocation" is set only when we can see the player
@@ -169,7 +222,8 @@ void AShooterAI::Tick(float DeltaTime)
 
 void AShooterAI::StartBehaviorTree(APawn* Player)
 {
-	// Keep compatibility with your GameMode call, but don't rely on it.
+	// Compatibility shim: allow external callers to provide the player pawn,
+	// but don't restart the behavior tree from here (OnPossess owns startup).
 	if (Player)
 	{
 		PlayerPawn = Player;
@@ -177,16 +231,8 @@ void AShooterAI::StartBehaviorTree(APawn* Player)
 
 	MyPawn = GetPawn();
 
-	if (EnemyAIBehaviorTree)
+	if (UBlackboardComponent* BB = GetBlackboardComponent())
 	{
-		const bool bStarted = RunBehaviorTree(EnemyAIBehaviorTree);
-		UE_LOG(LogTemp, Display, TEXT("%s RunBehaviorTree(StartBehaviorTree) => %s"),
-			*GetActorNameOrLabel(),
-			bStarted ? TEXT("Started") : TEXT("Failed"));
-
-		if (bStarted)
-		{
-			InitShooterAIBlackboard(GetBlackboardComponent(), PlayerPawn, MyPawn);
-		}
+		InitShooterAIBlackboard(BB, PlayerPawn, MyPawn);
 	}
 }

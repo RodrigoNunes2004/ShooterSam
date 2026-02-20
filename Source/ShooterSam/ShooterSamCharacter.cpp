@@ -165,13 +165,11 @@ void AShooterSamCharacter::UpdateHUD()
 	AShooterSamPlayerController* PlayerController = Cast<AShooterSamPlayerController>(GetController());
 	if (PlayerController)
 	{
-		float NewPercent = Health / MaxHealth;
-		if (NewPercent < 0.0f)
+		const float NewPercent = (MaxHealth > 0.0f) ? (Health / MaxHealth) : 0.0f;
+		if (PlayerController->HUD_Widget)
 		{
-			NewPercent = 0.0f;
+			PlayerController->HUD_Widget->SetHealthBarPercent(NewPercent);
 		}
-
-		//PlayerController->HUDWidget->SetHealthBarPercent(NewPercent);
 	}
 }
 
@@ -180,21 +178,20 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 	if (IsAlive)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Damage taken: %f"), Damage);
-
-		Health -= Damage;
 		UpdateHUD();
+		Health -= Damage;
 
 		if (Health <= 0.0f)
 		{
 			IsAlive = false;
 			Health = 0.0f;
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-			DetachFromControllerPendingDestroy();
-
-			UE_LOG(LogTemp, Display, TEXT("Character died: %s"), *GetActorNameOrLabel());
+			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GetMesh()->SetGenerateOverlapEvents(false);
+			GetCharacterMovement()->DisableMovement();
 
 			DetachFromControllerPendingDestroy();
 		}
+
 	}
 }
