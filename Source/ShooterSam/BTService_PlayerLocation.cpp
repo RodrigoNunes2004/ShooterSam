@@ -5,22 +5,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "ShooterSamCharacter.h"
-
-static bool IsPlayerPawnAlive(const APawn* Pawn)
-{
-	if (!Pawn)
-	{
-		return false;
-	}
-
-	if (const AShooterSamCharacter* ShooterChar = Cast<AShooterSamCharacter>(Pawn))
-	{
-		return ShooterChar->IsAlive;
-	}
-
-	return Pawn->GetController() != nullptr;
-}
+#include "ShooterSamAIUtils.h"
 
 UBTService_PlayerLocation::UBTService_PlayerLocation()
 {
@@ -50,7 +35,7 @@ void UBTService_PlayerLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint
 		return;
 	}
 
-	if (!IsPlayerPawnAlive(PlayerPawn))
+	if (!ShooterSamAIUtils::IsPlayerPawnAlive(PlayerPawn))
 	{
 		Blackboard->ClearValue(BlackboardKey.SelectedKeyName);
 		return;

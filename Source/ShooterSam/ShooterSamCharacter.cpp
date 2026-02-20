@@ -178,7 +178,6 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 	if (IsAlive)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Damage taken: %f"), Damage);
-		UpdateHUD();
 		Health -= Damage;
 
 		if (Health <= 0.0f)
@@ -190,8 +189,14 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 			GetMesh()->SetGenerateOverlapEvents(false);
 			GetCharacterMovement()->DisableMovement();
 
+			if (AShooterSamPlayerController* PC = Cast<AShooterSamPlayerController>(GetController()))
+			{
+				PC->ShowGameOverScreen();
+			}
+
 			DetachFromControllerPendingDestroy();
 		}
 
+		UpdateHUD();
 	}
 }

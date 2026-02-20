@@ -6,22 +6,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "ShooterSamCharacter.h"
-
-static bool IsPlayerPawnAlive(const APawn* Pawn)
-{
-	if (!Pawn)
-	{
-		return false;
-	}
-
-	if (const AShooterSamCharacter* ShooterChar = Cast<AShooterSamCharacter>(Pawn))
-	{
-		return ShooterChar->IsAlive;
-	}
-
-	return Pawn->GetController() != nullptr;
-}
+#include "ShooterSamAIUtils.h"
 
 UBTService_PlayerLocationIfSeen::UBTService_PlayerLocationIfSeen()
 {
@@ -51,7 +36,7 @@ void UBTService_PlayerLocationIfSeen::TickNode(UBehaviorTreeComponent& OwnerComp
 		return;
 	}
 
-	if (!IsPlayerPawnAlive(PlayerPawn))
+	if (!ShooterSamAIUtils::IsPlayerPawnAlive(PlayerPawn))
 	{
 		BlackboardComp->ClearValue(BlackboardKey.SelectedKeyName);
 		AIController->ClearFocus(EAIFocusPriority::Gameplay);

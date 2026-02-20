@@ -9,6 +9,78 @@
 #include "ShooterSam.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
+void AShooterSamPlayerController::ShowGameOverScreen()
+{
+	if (!GameOverWidgetClass)
+	{
+		return;
+	}
+
+	if (!GameOverWidget)
+	{
+		GameOverWidget = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
+	}
+
+	if (!GameOverWidget)
+	{
+		return;
+	}
+
+	if (!GameOverWidget->IsInViewport())
+	{
+		GameOverWidget->AddToViewport(100);
+	}
+
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;
+	bEnableMouseOverEvents = true;
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+
+	SetPause(true);
+}
+
+void AShooterSamPlayerController::ShowVictoryScreen()
+{
+	if (!VictoryWidgetClass)
+	{
+		return;
+	}
+
+	if (!VictoryWidget)
+	{
+		VictoryWidget = CreateWidget<UUserWidget>(this, VictoryWidgetClass);
+	}
+
+	if (!VictoryWidget)
+	{
+		return;
+	}
+
+	if (!VictoryWidget->IsInViewport())
+	{
+		VictoryWidget->AddToViewport(100);
+	}
+
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;
+	bEnableMouseOverEvents = true;
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(VictoryWidget->TakeWidget());
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+
+	SetPause(true);
+}
+
 void AShooterSamPlayerController::BeginPlay()
 {
 	Super::BeginPlay();

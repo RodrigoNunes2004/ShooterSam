@@ -50,4 +50,24 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	UHUD_Widget* HUD_Widget;
+
+	// UI screens
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> GameOverWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> VictoryWidgetClass;
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void ShowGameOverScreen();
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void ShowVictoryScreen();
+
+private:
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> GameOverWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> VictoryWidget;
 };

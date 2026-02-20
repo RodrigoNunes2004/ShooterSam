@@ -5,26 +5,8 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "ShooterSamCharacter.h"
+#include "ShooterSamAIUtils.h"
 #include "BrainComponent.h"
-
-static bool IsPlayerPawnAlive(const APawn* Pawn)
-{
-	if (!Pawn)
-	{
-		return false;
-	}
-
-	// If the pawn is our player character class, use the explicit alive flag.
-	if (const AShooterSamCharacter* ShooterChar = Cast<AShooterSamCharacter>(Pawn))
-	{
-		return ShooterChar->IsAlive;
-	}
-
-	// Generic fallback: if it's no longer possessed, treat as "dead/unavailable" for AI targetting.
-	// This matches your current death behavior (DetachFromControllerPendingDestroy()).
-	return Pawn->GetController() != nullptr;
-}
 
 namespace ShooterAIBlackboardKeys
 {
@@ -125,7 +107,7 @@ void AShooterAI::Tick(float DeltaTime)
 	}
 
 	// If the player is dead, stop tracking them.
-	if (!IsPlayerPawnAlive(PlayerPawn))
+	if (!ShooterSamAIUtils::IsPlayerPawnAlive(PlayerPawn))
 	{
 		// Hard stop AI logic so BT can't keep issuing MoveTo/focus updates.
 		if (UBrainComponent* Brain = GetBrainComponent())
