@@ -39,6 +39,11 @@ public:
 	// Call this from your enemy Blueprint when it dies.
 	UFUNCTION(BlueprintCallable, Category = "Victory")
 	void NotifyEnemyKilled(AActor* EnemyActor);
+
+private:
+	// Track level enemies so we only count each once.
+	UPROPERTY(Transient)
+	TSet<TWeakObjectPtr<AActor>> TrackedEnemies;
 };
 
 

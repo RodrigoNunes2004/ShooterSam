@@ -13,6 +13,8 @@
 #include "ShooterSam.h"
 
 #include "ShooterSamPlayerController.h"
+#include "ShooterSamGameMode.h"
+#include "Kismet/GameplayStatics.h"
 
 AShooterSamCharacter::AShooterSamCharacter()
 {
@@ -192,6 +194,15 @@ void AShooterSamCharacter::OnDamageTaken(AActor* DamagedActor, float Damage, con
 			if (AShooterSamPlayerController* PC = Cast<AShooterSamPlayerController>(GetController()))
 			{
 				PC->ShowGameOverScreen();
+			}
+			else
+			{
+				// Enemy death: notify the GameMode for victory counting.
+				if (AShooterSamGameMode* GM = Cast<AShooterSamGameMode>(UGameplayStatics::GetGameMode(this)))
+				{
+					UE_LOG(LogTemp, Display, TEXT("Enemy died: %s. Notifying GameMode."), *GetNameSafe(this));
+					GM->NotifyEnemyKilled(this);
+				}
 			}
 
 			DetachFromControllerPendingDestroy();
